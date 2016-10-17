@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+    {% block contents %}
+        <link rel="stylesheet" type="text/css" href="/static/css/slideControl.css" />
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.slideControl.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.jqplot.min.js"></script>
+
+        <script type="text/javascript">
+        $(document).ready(function() {
+            $('.slideControl').slideControl();
+            prettyPrint();
+        });
+        </script>
+
+	<link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+	<script type="text/javascript" src="/static/js/prettify.js"></script>
+        <script>
+           $(document).ready(function() {
+            someData = [[[]]];
+
+            someChart = $.jqplot('chart1', someData, {
+                axes: {
+                    xaxis: {max:parseFloat('{{obj.x_axis}}'),min:0},
+                    yaxis: {max:parseFloat('{{obj.y_axis}}'),min:0}
+                },
+                seriesDefaults: {
+                showLine:false,
+                },
+            });
+
+            seriesObj = null;
+            $('#target').click(function() {
+              seriesObj = someChart.series[0];
+              seriesObj.data.push([Math.random() * 10, Math.random() * 10]);
+              someChart.drawSeries({},0);
+              seriesObj.data.pop();
+            });
+            });
+
+
+        (function($){
+	 $.fn.slideControl = function(options) {
+
+		// defaults
+		var defaults = {
+			speed: 400,
+			x_lowerBound: 1,
+			x_upperBound: 10,
+			y_lowerBound: 1,
+			y_upperBound: 10
+		};
+
+		var options = $.extend(defaults, options);
+
+		return this.each(function() {
+
+			// set vars
+			var o = options;
+			var controller = false;
+			var position = 0;
+			var obj = this;
+			var x_axis = "x_axis";
+			var y_axis = "y_axis";
+			$(this).addClass('slideControlInput');
+			var parent = $(this).parent();
+			var label = $(parent).find('label');
+			parent.html("<label>" + $(label).html() +
+						"</label><span class=\"slideControlContainer\"><span class=\"slideControlFill\" style=\"width:" + $(obj).val()*10 + "%\"><span class=\"slideControlHandle\"></span></span></span>" + $(obj).wrap("<span></span>").parent().html());
+			var container = parent.find('.slideControlContainer');
+			var fill = container.find('.slideControlFill');
+			var handle = fill.find('.slideControlHandle');
+			var input = parent.find('input');
+			var containerWidth = container.outerWidth() + 1;
+			var handleWidth = $(handle).outerWidth();
+			var offset = $(container).offset();
+			var animate = function(value){$(fill).animate({ width: value + "%"}, o.speed);}
+
+			$(window).resize(function() {
+				offset = $(container).offset();
+			})
+
+			//adds shadow class to handle for IE <9
+			if (getInternetExplorerVersion() < 9 && getInternetExplorerVersion() > -1) {
+				handle.addClass('ieShadow');
+			}
+
+			// when user clicks anywhere on the slider
+			$(container).click(function(e) {
+				e.preventDefault();
+				position = checkBoundaries(Math.round(((e.pageX - offset.left + handleWidth/2)/containerWidth)*100), $(input).attr('id') );
+
+				animate(position);
+                //$("#x_axis").val(position/10);
+				if ($(input).attr('id') == "x_axis") {
+					$(input).val(position*(parseInt('{{obj.x_axis}}')/10)/10);
+				}
+				else{
+					       $(input).val(position*(parseInt('{{obj.y_axis}}')/10)/10);
+				}
+
+                //alert($("#x_axis").val());
+                //alert($("#y_axis").val());
+
+                seriesObj = someChart.series[0];
+              seriesObj.data.push([$("#x_axis").val(), $("#y_axis").val()]);
+              someChart.drawSeries({},0);
+              seriesObj.data.pop();
+			});
+
+			// when user clicks handle
+			$(handle).mousedown(function(e) {
+				e.preventDefault();
+				controller = true;
+				$(document).mousemove(function(e) {
+					e.preventDefault();
+												position = checkBoundaries(Math.round(((e.pageX - offset.left + handleWidth/2)/containerWidth)*100),$(input).attr('id')  );
+
+					if (controller) {
+						$(fill).width(position + "%");
+						if ($(input).attr('id') == "x_axis") {
+							$(input).val(position*(parseFloat('{{obj.x_axis}}')/10)/10);
+						}
+						else{
+							$(input).val(position*(parseFloat('{{obj.y_axis}}')/10)/10);
+						}
+					}
+				});
+				$(document).mouseup(function() {
+					e.preventDefault();
+					controller = false;
+				});
+			});
+		});
+
+		// checks if value is within boundaries
+		function checkBoundaries(value, ele) {
+			if (ele == "x_axis")
+			{
+			if (value < options.x_lowerBound*10)
+				return options.x_lowerBound*10;
+			else if (value > options.x_upperBound*10)
+				return options.x_upperBound*10;
+			else
+				return value;
+			}
+			else{
+				if (value < options.y_lowerBound*10)
+				return options.y_lowerBound*10;
+			else if (value > options.y_upperBound*10)
+				return options.y_upperBound*10;
+			else
+				return value;
+
+			}
+		}
+
+		// checks ie version
+		function getInternetExplorerVersion(){
+		   var rv = -1;
+		   if (navigator.appName == 'Microsoft Internet Explorer') {
+			  var ua = navigator.userAgent;
+			  var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+			  if (re.exec(ua) != null)
+				 rv = parseFloat( RegExp.$1 );
+		   }
+		   return rv;
+		}
+		return this;
+	 }
+		})(jQuery);
+
+	</script>
+
+	<br><a href="/">Home</a>
+		<h4>You can even add some more plots from admin panel
+             <a target="_blank" href="http://127.0.0.1:8003/admin/app2/comparative/add/">Click here to add</a>,
+            username - ansr,
+            password - ansr</h4>
+	<br><br>
+    <div class="example-plot" id="chart1"></div>
+	<br>
+	<div style="float: left;padding: 20px 0px 0px 30px;">
+		{% for i in comp_list %}
+		<a href="{% url 'app2home' %}?plot_id={{i.id}}"><h2>{{i.name}}({{i.x_axis}}, {{i.y_axis}})</h2></a>
+		{% endfor %}
+	</div>
+	<div class="content">
+		<h3 style="color: #980547;display: inline;">{{obj.name}}</h3><h4 style="float: right; display: inline;color: green;">Click on plots to left to change Graph</h4>
+			<ul class="clearfix">
+				<li><label id="x_label">X-Axis(Horizontal) </label><input type="text" value="6.0" class="slideControl" maxlength="3" id="x_axis" /></li>
+				<li><label id="y_label">Y-Axis(Vertical) </label><input type="text" value="4.0" class="slideControl" maxlength="3"  id="y_axis" /></li>
+				<!--<li><label>FooBar: </label><input type="text" value="9.0" class="slideControl" maxlength="3" /></li>-->
+			</ul>
+
+	</div>
+{% endblock %}

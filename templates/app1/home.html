@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+ {% load mptt_tags %}
+    {% block contents %}
+        <script>
+            function allowDrop(ev) {
+                ev.preventDefault();
+            }
+            function drag(ev) {
+                ev.dataTransfer.setData("member_id", ev.target.id);
+            }
+            function drop(ev) {
+                ev.preventDefault();
+                var member_id = ev.dataTransfer.getData("member_id");
+                var cat_id = ev.target.id
+                $.ajax({
+                        type:'GET',
+                        url:"{% url 'validate_member' %}",
+                        data:{'member_id':member_id,'cat_id':cat_id},
+                        success:function(data){
+                            if (data['status'] == "Correct")
+                            {
+                                ShowDialog("Correct");
+                            }
+                            else
+                            {
+                                ShowDialog("InCorrect");
+                            }
+                }
+        });
+        return false;
+                //ev.target.appendChild(document.getElementById(data));
+            }
+        </script>
+
+        <a href="/" style=""><h3>Home</h3></a> <br>
+        <h4>You can even add some more members from admin panel
+            <a target="_blank" href="http://127.0.0.1:8003/admin/app1/member/add/">Click here to add</a>,
+            username - ansr,
+            password - ansr</h4>
+        <div id="square" ><br>
+        <div id= square3>
+            <ul>
+            {% for member in members_list %}
+                {% ifequal member.gender "male" %}
+
+                    <li>
+                        <image src="/static/images/gent2.jpeg" title="{{member.description}}"  data-toggle="tooltip" height="112px" width="104px" draggable="true" ondragstart="drag(event)" id="{{member.id}}"></image>
+                        <span>{{member.description}}</span>
+                    </li>
+
+                {% else %}
+                    <li>
+                    <image src="/static/images/ladi2.jpeg" data-toggle="tooltip" height="112px" width="104px" draggable="true" ondragstart="drag(event)" id="{{member.id}}"></image>
+                    <span>{{member.description}}</span>
+                    </li>
+                {% endifequal %}
+
+            {% endfor %}
+            </ul>
+
+        </div>
+
+        </div>
+
+        <div id="square2">
+            {{parent.name}}<br>
+            <ul>
+            {% for i in l1 %}
+                <br>
+                <div style="justify-content: center;display:flex;">
+                {% for j in i %}
+                    <div ><image src="/static/images/images2.jpeg" height="70px" width="70px" ondrop="drop(event)" ondragover="allowDrop(event)" id='{{j.id}}'></image><br>{{ j.name }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <span>{{j.description}}</span></div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {% endfor %}
+                </div>
+            {% endfor %}
+            </ul>
+        </div>
+    {% endblock %}
